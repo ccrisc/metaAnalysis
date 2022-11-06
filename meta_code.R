@@ -1,9 +1,11 @@
-l ## ------------------------------------------------------------------------
+ ## ------------------------------------------------------------------------
 library(meta)
 library(stargazer)
 library(metafor)
 #devtools::install_github("MathiasHarrer/dmetar")
 library(dmetar)
+library(tidyverse)
+library(PerformanceAnalytics)
 
 ## ------------------------------------------------------------------------
 dat = read.csv("md.csv", sep = ';')[1:10,]
@@ -100,15 +102,60 @@ plot(m.gen.inf, "i2")
 
 ## forest plot
 forest(fit)
-funnel(fit)
 plot(se,mean)
 
-
-
-#Subgroup analyses
+## Subgroup analyses
 #https://bookdown.org/MathiasHarrer/Doing_Meta_Analysis_in_R/metareg.html
 m.gen.reg <- metareg(fit, ~year)
 bubble(m.gen.reg, studlab = TRUE)
 metareg(fit, RiskOfBias)
+
+
+# Show first entries of study name and 'extra_geo' column
+head(dat[,c("study", "extra_geo")])
+subgroup.meta <- update.meta(fit, 
+                             subgroup = extra_geo, 
+                             tau.common = FALSE)
+
+## Meta regression
+m.gen.reg <- metareg(subgroup.meta, ~year)
+bubble(m.gen.reg, studlab = TRUE)
+
+
+#multi regression
+dat[,c("", "extra_h_geo", "year")] %>% cor()
+MVRegressionData[,c("reputation", "quality", "pubyear")] %>% 
+  chart.Correlation()
+multimodel.inference(TE = "mean", 
+                     seTE = "se",
+                     data = MVRegressionData,
+                     predictors = c("pubyear", "quality", 
+                                    "reputation", "continent"),
+                     interaction = FALSE)
+
+## Pubblication bias
+fit.fun <- metagen(mean, se, studlab=study, data=dat, sm="MD")
+funnel(fit.fun, studlab = TRUE, xlim = c(-0.3,1))
+# Add title
+title("Funnel Plot")
+#shows the effect size of each study
+#The vertical line in the middle of the funnel shows the average effect size
+
+
+#- inspect how asymmetry patterns relate to statistical significance
+#help to distinguish publication bias from other forms of asymmetry
+# Define fill colors for contour
+col.contour = c("gray75", "gray85", "gray95")
+# Generate funnel plot (we do not include study labels here)
+funnel.meta(m.gen, xlim = c(-0.3, 1),
+            contour = c(0.9, 0.95, 0.99),
+            col.contour = col.contour)
+# Add a legend
+legend(x = 0.6, y = 0.01, 
+       legend = c("p < 0.1", "p < 0.05", "p < 0.01"),
+       fill = col.contour)
+# Add a title
+title("Contour-Enhanced Funnel Plot")
+#interested in the p<0.05 and p<0.01 regions, because effect sizes falling into this area are traditionally considered significant.
 
 
