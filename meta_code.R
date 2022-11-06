@@ -8,7 +8,7 @@ library(tidyverse)
 library(PerformanceAnalytics)
 
 ## ------------------------------------------------------------------------
-dat = read.csv("md.csv", sep = ';')[1:10,]
+dat = read.csv("md.csv", sep = ';')
 #dat = as.data.frame(dat)
 
 
