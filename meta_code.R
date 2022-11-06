@@ -75,16 +75,33 @@ stargazer(results2,
 #####
 
 
+##--- Between study heterogeneity
+m.gen <- update.meta(fit, prediction = TRUE)
+#this function indicates the outliers
+find.outliers(m.gen)
+#https://bookdown.org/MathiasHarrer/Doing_Meta_Analysis_in_R/heterogeneity.html
+m.gen.inf <- InfluenceAnalysis(m.gen, random = TRUE)
+# 1) influence diagnostic
+plot(m.gen.inf, "influence")
+# See plot covariance ratio, if <1 indicates that removing study k results in a more precise estimate of the pooled effect size
 
+# 2) leave-One-Out 
+#plot the overall effect and I^2 heterogeneity of all meta-analyses
+plot(m.gen.inf, "es")
+#we see the recalculated pooled effects, with one study omitted each time
+#ES plot is ordered by effect size
+#when squae is on the left studies have very high effect sizes, we find that the overall effect is smallest when they are removed.
+plot(m.gen.inf, "i2")
+#ordered by heterogeneity (low to high)
+
+#STUDIES HOWEVER DO NOT POINT IN THE SAME DIRECTION
+#So we cannot say studies which are likely influential outliers
+
+
+## forest plot
 forest(fit)
 funnel(fit)
 plot(se,mean)
-
-
-##--- Between study heterogeneity
-#https://bookdown.org/MathiasHarrer/Doing_Meta_Analysis_in_R/heterogeneity.html
-find.outliers(fit)
-
 
 
 
