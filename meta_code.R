@@ -2,9 +2,11 @@ l ## ------------------------------------------------------------------------
 library(meta)
 library(stargazer)
 library(metafor)
+#devtools::install_github("MathiasHarrer/dmetar")
+library(dmetar)
 
 ## ------------------------------------------------------------------------
-dat = read.csv("md.csv", sep = ';')
+dat = read.csv("md.csv", sep = ';')[1:10,]
 #dat = as.data.frame(dat)
 
 
