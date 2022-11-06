@@ -1,4 +1,4 @@
- ## ------------------------------------------------------------------------
+## ------------------------------------------------------------------------
 library(meta)
 library(stargazer)
 library(metafor)
@@ -10,7 +10,7 @@ library(PerformanceAnalytics)
 ## ------------------------------------------------------------------------
 dat = read.csv("md.csv", sep = ';')
 #dat = as.data.frame(dat)
-
+dat[is.na(dat)] <- 0
 
 #Table 1 with all required infos
 df_tables <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
@@ -106,10 +106,8 @@ plot(se,mean)
 
 ## Subgroup analyses
 #https://bookdown.org/MathiasHarrer/Doing_Meta_Analysis_in_R/metareg.html
-m.gen.reg <- metareg(fit, ~year)
-bubble(m.gen.reg, studlab = TRUE)
-metareg(fit, RiskOfBias)
-
+#m.gen.reg <- metareg(fit, ~year)
+#bubble(m.gen.reg, studlab = TRUE)
 
 # Show first entries of study name and 'extra_geo' column
 head(dat[,c("study", "extra_geo")])
@@ -123,14 +121,13 @@ bubble(m.gen.reg, studlab = TRUE)
 
 
 #multi regression
-dat[,c("", "extra_h_geo", "year")] %>% cor()
-MVRegressionData[,c("reputation", "quality", "pubyear")] %>% 
+dat[,c("extra_h_geo", "extra_h_journal", "year")] %>% cor()
+dat[,c("extra_h_geo", "extra_h_journal", "year")] %>% 
   chart.Correlation()
 multimodel.inference(TE = "mean", 
                      seTE = "se",
-                     data = MVRegressionData,
-                     predictors = c("pubyear", "quality", 
-                                    "reputation", "continent"),
+                     data = dat,
+                     predictors = c("year", "extra_h_geo", "extra_h_journal", "extra_geo"),
                      interaction = FALSE)
 
 ## Pubblication bias
@@ -151,11 +148,12 @@ funnel.meta(m.gen, xlim = c(-0.3, 1),
             contour = c(0.9, 0.95, 0.99),
             col.contour = col.contour)
 # Add a legend
-legend(x = 0.6, y = 0.01, 
+legend(x = 0.7, y = 0.01, 
        legend = c("p < 0.1", "p < 0.05", "p < 0.01"),
        fill = col.contour)
 # Add a title
 title("Contour-Enhanced Funnel Plot")
 #interested in the p<0.05 and p<0.01 regions, because effect sizes falling into this area are traditionally considered significant.
+
 
 
