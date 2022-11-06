@@ -3,7 +3,6 @@
 
 library(gitcreds)
 gitcreds_set()
-#token: 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
 
 #STEPS:
 # 1) Commit
