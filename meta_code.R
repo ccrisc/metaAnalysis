@@ -87,28 +87,29 @@ forest(region_subgroup_common,
 
 ## ------ META REGRESSION ------
 #sink("metareg_control.txt")
-metareg(fit,subgroup)
+#metareg(fit,subgroup)
 
 #test if gini had affected the estimates of effect sizes.
 model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
-output_pub_year <- metareg(model_pub_year, year)
+output_pub_year <- metareg(model_pub_year, ~year)
 #sink("metareg_gini.txt")
 output_pub_year
 bubble(output_pub_year,
-               xlab = "Publication Year",
-               col.line = "blue",
-               studlab = TRUE)
+       xlab = "Pubblication year",
+       col.line = "blue",
+       #cex = c(seq(0.8, 1.7, by=0.1)),
+       studlab = FALSE)
 
 
 
 #multi model interference
 dat[,c("gdp", "gini", "year")] %>% cor()
-dat[,c("gdp", "gini", "year")] %>% 
+dat[,c("gdp", "gini", "year",  "obs")] %>% 
   chart.Correlation()
 multimodel.inference(TE = "mean", 
                      seTE = "se",
                      data = dat,
-                     predictors = c("gdp", "gini", "year"),
+                     predictors = c("gdp", "gini", "region"),
                      interaction = FALSE)
 
 
