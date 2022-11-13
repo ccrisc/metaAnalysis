@@ -19,6 +19,8 @@ dat$subgroup <- factor(dat$extra_geo %in% c("US", "North America", "EU"),
                            labels = c("developing country", "developed country"))
 dat$gini <- as.numeric(gsub(",", ".", dat$gini, fixed = TRUE))
 dat$gdp <- as.numeric(gsub(",", ".", dat$gdp, fixed = TRUE))
+dat$subgroup_gini <- c(1,0,0,1,1,0,0,1,0,0)
+
 str(dat)
 
 
@@ -131,7 +133,6 @@ stargazer(df_tables,
           rownames=FALSE,
           title="Table 1: Studies included in the Meta-Analysis", 
           out="table1.html")
-
 
 
 
