@@ -18,7 +18,7 @@ dat$obs <- as.numeric(gsub(",", "", dat$obs, fixed = TRUE))
 dat$subgroup <- factor(dat$extra_geo %in% c("US", "North America", "EU"),
                            labels = c("developing country", "developed country"))
 dat$gini <- as.numeric(gsub(",", ".", dat$gini, fixed = TRUE))
-dat$gdp <- dat$se <- as.numeric(gsub(",", ".", dat$gdp, fixed = TRUE))
+dat$gdp <- as.numeric(gsub(",", ".", dat$gdp, fixed = TRUE))
 str(dat)
 
 
@@ -41,7 +41,7 @@ plot(se,mean)
 
 ## ------ ROBUSTNESS CHECK (check heterogeneity) ------
 find.outliers(fit) #outliers
-m.gen.inf <- InfluenceAnalysis(m.gen, random = TRUE)
+m.gen.inf <- InfluenceAnalysis(fit, random = TRUE)
 plot(m.gen.inf, "influence") #influence diagnostic
 # See plot covariance ratio, if <1 indicates that removing study k results in a more precise estimate of the pooled effect size
 
@@ -51,7 +51,7 @@ plot(m.gen.inf, "es") #leave-One-Out: plot the overall effect and I^2 heterogene
 
 ## ------ PUBBLICATION BIAS ------
 funnel(fit)
-funnel.meta(m.gen, xlim = c(-0.3, 1),
+funnel.meta(fit, xlim = c(-0.3, 1),
             contour = c(0.9, 0.95, 0.99),
             col.contour = c("gray75", "gray85", "gray95"))
 legend(x = 0.6, y = 0.01, 
@@ -68,7 +68,7 @@ region_subgroup_common<-update.meta(fit,
                                     comb.random = TRUE, 
                                     comb.fixed = TRUE,
                                     tau.common=TRUE)
-sink("region_subgroup_common.txt")
+#sink("region_subgroup_common.txt")
 region_subgroup_common
 
 forest(region_subgroup_common,
@@ -86,13 +86,13 @@ forest(region_subgroup_common,
 
 
 ## ------ META REGRESSION ------
-sink("metareg_control.txt")
+#sink("metareg_control.txt")
 metareg(fit,subgroup)
 
 #test if gini had affected the estimates of effect sizes.
 model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
 output_pub_year <- metareg(model_pub_year, year)
-sink("metareg_gini.txt")
+#sink("metareg_gini.txt")
 output_pub_year
 bubble(output_pub_year,
                xlab = "Publication Year",
@@ -101,30 +101,18 @@ bubble(output_pub_year,
 
 
 
-#multi regression
+#multi model interference
 dat[,c("gdp", "gini", "year")] %>% cor()
-dat[,c("extra_h_geo", "extra_h_journal", "year")] %>% 
+dat[,c("gdp", "gini", "year")] %>% 
   chart.Correlation()
 multimodel.inference(TE = "mean", 
                      seTE = "se",
                      data = dat,
-                     predictors = c("year", "extra_h_geo", "extra_h_journal", "extra_geo"),
+                     predictors = c("gdp", "gini", "year"),
                      interaction = FALSE)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-#Table 1 with all required infos
+## ------ GENERATE TABLE ------
 df_tables <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
                         `Region of interest` = dat[,'region'],
                         `Sample size` =  dat[,'obs'],
@@ -142,75 +130,6 @@ stargazer(df_tables,
           rownames=FALSE,
           title="Table 1: Studies included in the Meta-Analysis", 
           out="table1.html")
-
-
-df_fit <- summary(fit)
-
-#Table 2 
-results <- data.frame(`Study` = df_fit$studlab,
-                        `MD` = round(df_fit$TE, 2),
-                        `95% CI` = paste0('[', round(df_fit$lower,2), ' ; ', round(df_fit$upper, 2),']'),
-                        `W(common)` = round(df_fit$w.fixed, 2),
-                        `W(random)` = round(df_fit$w.random, 2),
-                        check.names = FALSE)
-stargazer(results, 
-          summary=FALSE, 
-          rownames=FALSE,
-          title="Table 2: FE and RE meta-analysis based on estimates and their standard errors", 
-          notes = paste0("Number of studies combined: k = ", df_fit$k),
-          out="table2.html")
-
-#####
-results2 <- data.frame(`Model` = c('Common effect model', 'Random effect model'),
-                      `MD` = round(c(df_fit$TE.fixed, df_fit$TE.random),  4),
-                      `95% CI` = c(paste0('[', round(df_fit$lower.fixed,4), ' ; ', round(df_fit$upper.fixed, 4),']'),
-                                   paste0('[', round(df_fit$lower.random,4), ' ; ', round(df_fit$upper.random, 4),']')),
-                      `z` = round(c(df_fit$zval.fixed,df_fit$zval.random), 2),
-                      `p-value` = round(c(df_fit$pval.fixed,df_fit$pval.random), 2),
-                      check.names = FALSE)
-stargazer(results2, 
-          summary=FALSE, 
-          rownames=FALSE,
-          title="Table 3: Common/random effect models",
-          out="table3.html")
-#####
-
-
-
-#multi regression
-dat[,c("extra_h_geo", "extra_h_journal", "year")] %>% cor()
-dat[,c("extra_h_geo", "extra_h_journal", "year")] %>% 
-  chart.Correlation()
-multimodel.inference(TE = "mean", 
-                     seTE = "se",
-                     data = dat,
-                     predictors = c("year", "extra_h_geo", "extra_h_journal", "extra_geo"),
-                     interaction = FALSE)
-
-## Pubblication bias
-fit.fun <- metagen(mean, se, studlab=study, data=dat, sm="MD")
-funnel(fit.fun, studlab = TRUE, xlim = c(-0.3,1))
-# Add title
-title("Funnel Plot")
-#shows the effect size of each study
-#The vertical line in the middle of the funnel shows the average effect size
-
-
-#- inspect how asymmetry patterns relate to statistical significance
-#help to distinguish publication bias from other forms of asymmetry
-# Define fill colors for contour
-col.contour = c("gray75", "gray85", "gray95")
-# Generate funnel plot (we do not include study labels here)
-funnel.meta(m.gen, xlim = c(-0.3, 1),
-            contour = c(0.9, 0.95, 0.99),
-            col.contour = col.contour)
-# Add a legend
-legend(x = 0.7, y = 0.01, 
-       legend = c("p < 0.1", "p < 0.05", "p < 0.01"),
-       fill = col.contour)
-# Add a title
-title("Contour-Enhanced Funnel Plot")
-#interested in the p<0.05 and p<0.01 regions, because effect sizes falling into this area are traditionally considered significant.
 
 
 
