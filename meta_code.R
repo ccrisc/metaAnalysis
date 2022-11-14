@@ -16,10 +16,11 @@ dat$se <- as.numeric(gsub(",", ".", dat$se, fixed = TRUE))
 dat$mean <- as.numeric(gsub(",", ".", dat$mean, fixed = TRUE))
 dat$obs <- as.numeric(gsub(",", "", dat$obs, fixed = TRUE))
 dat$subgroup <- factor(dat$extra_geo %in% c("US", "North America", "EU"),
-                           labels = c("developing country", "developed country"))
+                      labels = c("developing country", "developed country"))
 dat$gini <- as.numeric(gsub(",", ".", dat$gini, fixed = TRUE))
 dat$gdp <- as.numeric(gsub(",", ".", dat$gdp, fixed = TRUE))
-dat$subgroup_gini <- c(1,0,0,1,1,0,0,1,0,0)
+#dat$subgroup <- c(1,0,0,1,1,0,0,1,0,0)
+#dat$subgroup <- dat$extra_geo
 
 str(dat)
 
@@ -30,13 +31,10 @@ fit <- metagen(mean,
                se,
                data=dat,
                studlab=paste0(study,'(',year,')'),
-               comb.fixed = FALSE,
-               comb.random = TRUE,
-               method.tau = "SJ",
-               hakn = TRUE,
-               #prediction=TRUE,
                sm="MD")
+sink("metaresults.txt")
 print(summary(fit), round = 2)
+sink()
 forest(fit)
 plot(se,mean)
 
@@ -61,29 +59,19 @@ legend(x = 0.6, y = 0.01,
        fill = c("gray75", "gray85", "gray95"))
 title("Contour-Enhanced Funnel Plot")
 
+sink("Egger test.txt")
 metabias(fit) #Egger's test of the intercept quantifies funnel plot asymmetry and performs a statistical test (Egger et al., 1997).
+sink()
 
 
 ## ------ SUBGROUP ANALYSIS based on GDP per capita (subgroup) ------
 region_subgroup_common<-update.meta(fit, 
-                                    byvar=subgroup, 
-                                    comb.random = TRUE, 
-                                    comb.fixed = TRUE,
-                                    tau.common=TRUE)
+                                    byvar=subgroup)
 #sink("region_subgroup_common.txt")
 region_subgroup_common
 
-forest(region_subgroup_common,
-       #sortvar = as.Date(dat$subgroup_GDP),
-       allstudies = TRUE,
-       comb.fixed=TRUE,
-       comb.random = TRUE,
-       hetstat=FALSE,
-       test.effect.subgroup.random = TRUE,
-       col.by="dark gray",
-       label.test.effect.subgroup.random="Subgroup effect",
-       test.subgroup.random = TRUE)
-
+forest(region_subgroup_common)
+title("Forest plot by GDP subgroup")
 
 
 
@@ -97,7 +85,7 @@ output_pub_year <- metareg(model_pub_year, ~year)
 #sink("metareg_gini.txt")
 output_pub_year
 bubble(output_pub_year,
-       xlab = "Pubblication year",
+       xlab = "Publication year",
        col.line = "blue",
        #cex = c(seq(0.8, 1.7, by=0.1)),
        studlab = FALSE)
@@ -133,6 +121,3 @@ stargazer(df_tables,
           rownames=FALSE,
           title="Table 1: Studies included in the Meta-Analysis", 
           out="table1.html")
-
-
-
