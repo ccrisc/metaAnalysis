@@ -138,13 +138,13 @@ bubble(output_pub_year,
 
 
 #multi model interference
-dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs')] %>% cor()
-dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs')] %>% 
+dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year')] %>% cor()
+dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year')] %>% 
   chart.Correlation()
 multimodel.inference(TE = "mean", 
                      seTE = "se",
                      data = dat,
-                     predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs'),
+                     predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year'),
                      interaction = FALSE)
 
 
