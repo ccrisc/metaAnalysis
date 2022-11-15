@@ -58,7 +58,6 @@ legend(x = 0.6, y = 0.01,
        legend = c("p < 0.1", "p < 0.05", "p < 0.01"),
        fill = c("gray75", "gray85", "gray95"))
 title("Contour-Enhanced Funnel Plot")
-
 sink("Egger test.txt")
 metabias(fit) #Egger's test of the intercept quantifies funnel plot asymmetry and performs a statistical test (Egger et al., 1997).
 sink()
@@ -67,12 +66,46 @@ sink()
 ## ------ SUBGROUP ANALYSIS based on GDP per capita (subgroup) ------
 region_subgroup_common<-update.meta(fit, 
                                     byvar=subgroup)
-#sink("region_subgroup_common.txt")
+#sink("region_subgroupGDP_common.txt")
 region_subgroup_common
 
 forest(region_subgroup_common)
-title("Forest plot by GDP subgroup")
+grid.text("Forest plot by GDP subgroup", .5, .9, gp=gpar(cex=2))
 
+
+
+## ------ SUBGROUP ANALYSIS based on Gini (subgroup) ------
+dat$subgroup <- c(1,0,0,1,1,0,0,1,0,0)
+attach(dat)
+fit <- metagen(mean, 
+               se,
+               data=dat,
+               studlab=paste0(study,'(',year,')'),
+               sm="MD")
+region_subgroup_common<-update.meta(fit, 
+                                    byvar=subgroup)
+#sink("region_subgroupGini_common.txt")
+region_subgroup_common
+
+forest(region_subgroup_common)
+grid.text("Forest plot by Gini index subgroup", .5, .9, gp=gpar(cex=2))
+
+
+
+## ------ SUBGROUP ANALYSIS based on Region (subgroup) ------
+dat$subgroup <- dat$extra_geo
+attach(dat)
+fit <- metagen(mean, 
+               se,
+               data=dat,
+               studlab=paste0(study,'(',year,')'),
+               sm="MD")
+region_subgroup_common<-update.meta(fit, 
+                                    byvar=subgroup)
+#sink("region_subgroupGini_common.txt")
+region_subgroup_common
+forest(region_subgroup_common)
+grid.text("Forest plot by Geographical area subgroup", .5, .9, gp=gpar(cex=2))
 
 
 ## ------ META REGRESSION ------
@@ -80,6 +113,17 @@ title("Forest plot by GDP subgroup")
 #metareg(fit,subgroup)
 
 #test if gini had affected the estimates of effect sizes.
+model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
+output_pub_year <- metareg(model_pub_year, ~gini)
+#sink("metareg_gini.txt")
+output_pub_year
+bubble(output_pub_year,
+       xlab = "Gini index",
+       col.line = "blue",
+       #cex = c(seq(0.8, 1.7, by=0.1)),
+       studlab = FALSE)
+
+#test if publication year had affected the estimates of effect sizes.
 model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
 output_pub_year <- metareg(model_pub_year, ~year)
 #sink("metareg_gini.txt")
@@ -92,19 +136,20 @@ bubble(output_pub_year,
 
 
 
+
 #multi model interference
-dat[,c("gdp", "gini", "year")] %>% cor()
-dat[,c("gdp", "gini", "year",  "obs")] %>% 
+dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs')] %>% cor()
+dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs')] %>% 
   chart.Correlation()
 multimodel.inference(TE = "mean", 
                      seTE = "se",
                      data = dat,
-                     predictors = c("gdp", "gini", "region"),
+                     predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs'),
                      interaction = FALSE)
 
 
 ## ------ GENERATE TABLE ------
-df_tables <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
+Table2 <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
                         `Region of interest` = dat[,'region'],
                         `Sample size` =  dat[,'obs'],
                         `Period` = dat[,'period'],
@@ -116,8 +161,35 @@ df_tables <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (
                         `Standard error` = dat[,'se'], 
                         `Ref. effect` = paste0('Page ', page, ', ', table),
                         check.names = FALSE)
-stargazer(df_tables, 
+stargazer(Table2, 
           summary=FALSE, 
           rownames=FALSE,
-          title="Table 1: Studies included in the Meta-Analysis", 
+          title="Table 2: Studies included in the Meta-Analysis", 
+          out="table2.html")
+
+#-------
+tbl2 = read.csv("discarded.csv", sep = ';')
+Table1 <- data.frame(`Authors/year of publication` = paste0(tbl2 [,'study'],' (',tbl2 [,'year'],')'),
+                        `Region of interest` = tbl2 [,'region'],
+                        `Reason for exclusion` = tbl2 [,'why'], 
+                        check.names = FALSE)
+
+stargazer(Table1, 
+          summary=FALSE, 
+          rownames=FALSE,
+          title="Table 1: Studies not included in the Meta-Analysis", 
           out="table1.html")
+
+#-------
+Table3 <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
+                     `Journal` = dat[,'journal'],
+                     `h-index for journal` =  dat[,'h_journal'],
+                     `h-index for country` = dat[,'h_country'],
+                     `Gini index` = dat[,'gini'],
+                     `GDP per capita ($)` = dat[,'gdp'],
+                     check.names = FALSE)
+stargazer(Table3, 
+          summary=FALSE, 
+          rownames=FALSE,
+          title="Table 3: additional data retrieved for the studies", 
+          out="table3.html")
