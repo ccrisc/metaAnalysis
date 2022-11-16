@@ -146,7 +146,7 @@ dat[,c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year')] %>%
 multimodel.inference(TE = "mean", 
                      seTE = "se",
                      data = dat,
-                     predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year'),
+                     predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year', 'sample_region'),
                      eval.criterion = 'BIC',
                      interaction = FALSE)
 
@@ -186,10 +186,10 @@ stargazer(Table1,
 #-------
 Table3 <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
                      `Journal` = dat[,'journal'],
-                     `h-index for journal` =  dat[,'h_journal'],
-                     `h-index for country` = dat[,'h_country'],
+                     `h-index journal` =  dat[,'h_journal'],
+                     `h-index country` = dat[,'h_country'],
                      `Gini index` = dat[,'gini'],
-                     `GDP per capita ($)` = dat[,'gdp'],
+                     `GDP per capita` = dat[,'gdp'],
                      check.names = FALSE)
 stargazer(Table3, 
           summary=FALSE, 
