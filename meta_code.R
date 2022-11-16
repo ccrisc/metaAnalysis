@@ -6,6 +6,7 @@ library(metafor)
 library(dmetar)
 library(tidyverse)
 library(PerformanceAnalytics)
+library(grid)
 
 
 ## ------ PREPARE DATA ------
@@ -16,7 +17,7 @@ dat$se <- as.numeric(gsub(",", ".", dat$se, fixed = TRUE))
 dat$mean <- as.numeric(gsub(",", ".", dat$mean, fixed = TRUE))
 dat$obs <- as.numeric(gsub(",", "", dat$obs, fixed = TRUE))
 dat$subgroup <- factor(dat$extra_geo %in% c("US", "North America", "EU"),
-                      labels = c("developing country", "developed country"))
+                       labels = c("developing country", "developed country"))
 dat$gini <- as.numeric(gsub(",", ".", dat$gini, fixed = TRUE))
 dat$gdp <- as.numeric(gsub(",", ".", dat$gdp, fixed = TRUE))
 #dat$subgroup <- c(1,0,0,1,1,0,0,1,0,0)
@@ -47,7 +48,7 @@ plot(m.gen.inf, "influence") #influence diagnostic
 
 plot(m.gen.inf, "es") #leave-One-Out: plot the overall effect and I^2 heterogeneity of all meta-analyses
 #we see the recalculated pooled effects, with one study omitted each time
-
+plot(m.gen.inf, "i2")
 
 ## ------ PUBBLICATION BIAS ------
 funnel(fit)
@@ -113,15 +114,16 @@ grid.text("Forest plot by Geographical area subgroup", .5, .9, gp=gpar(cex=2))
 #metareg(fit,subgroup)
 
 #test if gini had affected the estimates of effect sizes.
-model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
-output_pub_year <- metareg(model_pub_year, ~gini)
+model_gini <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
+output_gini <- metareg(model_gini, ~gini)
 #sink("metareg_gini.txt")
-output_pub_year
-bubble(output_pub_year,
+output_gini
+bubble(output_gini,
        xlab = "Gini index",
        col.line = "blue",
        #cex = c(seq(0.8, 1.7, by=0.1)),
        studlab = FALSE)
+title("Gini influence on estimates")
 
 #test if publication year had affected the estimates of effect sizes.
 model_pub_year <- metagen(mean,se,studlab=paste0(study,'(',year,')'),data=dat)
@@ -133,7 +135,7 @@ bubble(output_pub_year,
        col.line = "blue",
        #cex = c(seq(0.8, 1.7, by=0.1)),
        studlab = FALSE)
-
+title("Publication year influence on estimates")
 
 
 
@@ -145,22 +147,23 @@ multimodel.inference(TE = "mean",
                      seTE = "se",
                      data = dat,
                      predictors = c("gdp", "gini", "h_journal", 'h_country', 'obs', 'year'),
+                     eval.criterion = 'BIC',
                      interaction = FALSE)
 
 
 ## ------ GENERATE TABLE ------
 Table2 <- data.frame(`Authors/year of publication` = paste0(dat[,'study'],' (',dat[,'year'],')'),
-                        `Region of interest` = dat[,'region'],
-                        `Sample size` =  dat[,'obs'],
-                        `Period` = dat[,'period'],
-                        `Study population` = dat[,'population'],
-                        `Nature of treatment` = dat[,'treatment'],
-                        `Outcome` = dat[,'outcome'],
-                        `Statistical method` = dat[,'method'],
-                        `Treatment effect` = dat[,'mean'],
-                        `Standard error` = dat[,'se'], 
-                        `Ref. effect` = paste0('Page ', page, ', ', table),
-                        check.names = FALSE)
+                     `Region of interest` = dat[,'region'],
+                     `Sample size` =  dat[,'obs'],
+                     `Period` = dat[,'period'],
+                     `Study population` = dat[,'population'],
+                     `Nature of treatment` = dat[,'treatment'],
+                     `Outcome` = dat[,'outcome'],
+                     `Statistical method` = dat[,'method'],
+                     `Treatment effect` = dat[,'mean'],
+                     `Standard error` = dat[,'se'], 
+                     `Ref. effect` = paste0('Page ', page, ', ', table),
+                     check.names = FALSE)
 stargazer(Table2, 
           summary=FALSE, 
           rownames=FALSE,
@@ -170,9 +173,9 @@ stargazer(Table2,
 #-------
 tbl2 = read.csv("discarded.csv", sep = ';')
 Table1 <- data.frame(`Authors/year of publication` = paste0(tbl2 [,'study'],' (',tbl2 [,'year'],')'),
-                        `Region of interest` = tbl2 [,'region'],
-                        `Reason for exclusion` = tbl2 [,'why'], 
-                        check.names = FALSE)
+                     `Region of interest` = tbl2 [,'region'],
+                     `Reason for exclusion` = tbl2 [,'why'], 
+                     check.names = FALSE)
 
 stargazer(Table1, 
           summary=FALSE, 
