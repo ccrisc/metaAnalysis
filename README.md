@@ -2,7 +2,9 @@
 This is the repository for the implementation of a meta-analysis on true effect of minimum wage on wage inequality.
 
 The organisation is as follow:
-- init__.R runs the front-end logic.
+- 
+- md.csv 
+- discarded.csv runs the front-end logic.
 - src groups the source code.
 
 In src the main files are:
