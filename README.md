@@ -1,6 +1,6 @@
 # MetaAnalysis in R
 This is the repository for the implementation of a meta-analysis on true effect of minimum wage on wage inequality.
-the conducted meta-analysis focuses on ten papers published in the period between 2004 and 2021 that target different regions worldwide, including both developed and developing countries.
+The conducted study focuses on ten papers published in the period between 2004 and 2021 that target different regions worldwide, including both developed and developing countries.
 The meta-analysis is conducted using the package metafor for R.
 
 The organisation is as follow:
